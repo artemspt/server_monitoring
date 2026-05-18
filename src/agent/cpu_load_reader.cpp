@@ -5,18 +5,9 @@
 #include <thread>
 #include <chrono>
 
-struct CpuStats {
-    long user;
-    long nice;
-    long system;
-    long idle;
-    long iowait;
-    long irq;
-    long softirq;
-    long steal;
-};
+#include "cpu_load_reader.h"
 
-CpuStats readCpuStats() {
+CpuStats cpu_load_reader::readCpuStats() {
     std::ifstream file("/proc/stat");
     std::string line;
     CpuStats stats = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -30,17 +21,17 @@ CpuStats readCpuStats() {
     return stats;
 }
 
-long totalCpuTime(const CpuStats& stats) {
+long cpu_load_reader::totalCpuTime(const CpuStats& stats) {
     return stats.user + stats.nice + stats.system +
            stats.idle + stats.iowait + stats.irq +
            stats.softirq + stats.steal;
 }
 
-long idleTime(const CpuStats& stats) {
+long cpu_load_reader::idleTime(const CpuStats& stats) {
     return stats.idle + stats.iowait;
 }
 
-double find_cpu_stats() {
+double cpu_load_reader::find_cpu_stats() {
     CpuStats prev = readCpuStats();
     std::this_thread::sleep_for(std::chrono::seconds(1));
     CpuStats curr = readCpuStats();
@@ -52,14 +43,5 @@ double find_cpu_stats() {
         cpuUsage = std::trunc(cpuUsage * 100.0) / 100.0;
         return cpuUsage;
     }
-    return 0;
-}
-
-int main() {
-    while (true) {
-        double cpu_stats = find_cpu_stats();
-        std::cout << cpu_stats << std::endl;
-    }
-
     return 0;
 }
